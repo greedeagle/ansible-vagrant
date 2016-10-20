@@ -1,0 +1,38 @@
+- hosts: testgroup
+  become: yes
+  tasks:
+    - name: remove pupper 
+      yum: name=puppet* state=absent
+      
+    - name: update system
+      yum: name=* state=latest
+
+    - name: install basic yum packages.
+      yum:  name={{ item }} state=latest
+      with_items:
+      - yum-cron
+      - chrony
+      - vim
+      - zip
+      - unzip
+      - git
+      - chrony
+
+    - name: setting yum-cron
+      lineinfile: >-
+        dest='/etc/yum/yum-cron.conf'
+        state=present
+        backrefs=yes
+        regexp='{{item.regexp}}'
+        line='{{item.line}}'
+      with_items:
+      - regexp: 'apply_updates\s*=\s*no'
+        line: 'apply_updates = yes'
+
+    - name: start services
+      service: name={{item}} enabled=yes state=restarted
+      with_items:
+      - chronyd
+      - yum-cron
+
+
